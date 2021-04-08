@@ -1,6 +1,9 @@
-First, you need to run server(net core API) in project webAPI.
-then 
-In the project directory, you can run:
-### `npm install`
-### `npm start`
+First, you need to run server(net core API).
+## server main screen
+![image](images/serverScreen.jpg)
+then you can lunch the website
+## website main screen
+![image](images/frontMainScreen.jpg)
 
+## Watering screen
+![image](images/wateringScreen.jpg)
