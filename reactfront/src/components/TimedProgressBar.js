@@ -16,8 +16,6 @@ class TimedProgressBar extends Component {
     }
 
     changingWateringStatus(plantId) {
-        // not watering within 30 seconds of the last watering
-        
         fetch(process.env.REACT_APP_API + 'plant', {
             method: 'PUT',
             headers: {
