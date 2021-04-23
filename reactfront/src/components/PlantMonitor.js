@@ -34,6 +34,10 @@ class PlantMonitor extends Component {
 
   componentDidUpdate() {
     this.refreshList();
+  }  
+  
+  componentWillUnmount() {
+    clearInterval(this.timeId);
   }
 
   // update table watering status
@@ -72,7 +76,7 @@ class PlantMonitor extends Component {
         console.log(result);
       },
         (error) => {
-          alert('Failed'+error);
+          alert('Failed' + error);
         })
   }
     
@@ -121,13 +125,11 @@ class PlantMonitor extends Component {
                         </Button>                        
                       </ButtonToolbar>
                     </td>
-
                   </tr>
                 );
               })
             }
           </tbody>
-
         </Table>
       </div>
     );
