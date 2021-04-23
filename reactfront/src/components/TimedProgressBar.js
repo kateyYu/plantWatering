@@ -2,18 +2,23 @@ import React, { Component } from 'react';
 import { ProgressBar } from 'react-bootstrap';
 
 class TimedProgressBar extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            progress: 0
-        };
-        this.intervalTimer = 0;
-        this.timeElapsed = this.props.timerInterval;
-    }
-    componentDidMount() {
-        const { timerInterval } = this.props;
-        this.intervalTimer = window.setInterval(this.updateProgress, timerInterval);
-    }
+  constructor(props) {
+    super(props)
+    this.state = {
+      progress: 0
+    };
+    this.intervalTimer = 0;
+    this.timeElapsed = this.props.timerInterval;
+  }
+
+  componentDidMount() {
+    const { timerInterval } = this.props;
+    this.intervalTimer = window.setInterval(this.updateProgress, timerInterval);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.intervalTimer);
+  }
 
   changingWateringStatus(plantId) {
     fetch(process.env.REACT_APP_API + 'plant', {
@@ -49,12 +54,7 @@ class TimedProgressBar extends Component {
       this.setState(() => ({
         progress: parseInt(percentageTimeElapsed, 10)
       }));
-      this.timeElapsed = this.timeElapsed + timerInterval;
-      const timeDiff = totalTime - this.timeElapsed;
-      if (timeDiff > 0 && timeDiff < timerInterval) {
-        window.clearInterval(this.intervalTimer);
-        this.intervalTimer = window.setInterval(this.updateProgress, timeDiff);
-      }
+      this.timeElapsed += timerInterval;
     }
   }
 
