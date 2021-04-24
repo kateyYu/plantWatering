@@ -17,7 +17,7 @@ class TimedProgressBar extends Component {
   }
 
   componentWillUnmount() {
-    clearInterval(this.intervalTimer);
+    window.clearInterval(this.intervalTimer);
   }
 
   changingWateringStatus(plantId) {

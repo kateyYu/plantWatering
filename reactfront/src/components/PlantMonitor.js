@@ -41,12 +41,12 @@ class PlantMonitor extends Component {
   }
 
   // update table watering status
-  startWatering = (plantId, wateringDatetime) => {
+  startWatering = (plantId, wateringDateTime) => {
     // not watering within 30 seconds of the last watering
-    const wateringLocalTime = Moment.utc(wateringDatetime).local().format()
+    const wateringLocalTime = Moment.utc(wateringDateTime).local().format()
     var diff = Math.abs(new Date().getTime() - new Date(wateringLocalTime).getTime()) / 1000;
     if (diff < 30) {
-      alert("not watering within 30 seconds of the last watering");
+      alert("no watering within 30 seconds of the last watering session");
       return;
     }
 
