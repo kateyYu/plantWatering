@@ -13,48 +13,27 @@ class TimedProgressBar extends Component {
 
   componentDidMount() {
     const { timerInterval } = this.props;
-    this.intervalTimer = window.setInterval(this.updateProgress, timerInterval);
+    this.intervalTimer = setInterval(this.updateProgress, timerInterval);
   }
 
   componentWillUnmount() {
-    window.clearInterval(this.intervalTimer);
-  }
-
-  changingWateringStatus(plantId) {
-    fetch(process.env.REACT_APP_API + 'plant', {
-      method: 'PUT',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        PlantId: plantId,
-        WaterDateTime: new Date(),
-        IsWatering: 0
-      })
-    })
-      .then(res => res.json())
-      .then((result) => {
-        console.log(result);
-      },
-        (error) => {
-          alert('Failed' + error);
-        })
+    clearInterval(this.intervalTimer);
   }
 
   updateProgress = () => {
-    const { timerInterval, totalTime, id } = this.props;
+    const { timerInterval, totalTime, index, wateringFinish } = this.props;
     const percentageTimeElapsed = Math.min((this.timeElapsed / totalTime) * 100, 100);
     if (percentageTimeElapsed <= 100) {
-      if (percentageTimeElapsed === 100) {
-        window.clearInterval(this.intervalTimer);
-        //update watering status
-        this.changingWateringStatus(id);
-      }
       this.setState(() => ({
         progress: parseInt(percentageTimeElapsed, 10)
       }));
+      
       this.timeElapsed += timerInterval;
+      if (percentageTimeElapsed === 100) {
+        clearInterval(this.intervalTimer);
+        //update watering status
+        wateringFinish(index);
+      }
     }
   }
 

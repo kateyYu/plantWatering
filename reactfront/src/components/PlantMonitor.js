@@ -1,87 +1,38 @@
 import React, { Component } from 'react';
-import {Table} from 'react-bootstrap';
+import { Table } from 'react-bootstrap';
 import { Button, ButtonToolbar } from 'react-bootstrap';
 import Moment from 'moment';
 import TimedProgressBar from './TimedProgressBar'
+import store from '../store';
+import {
+  getStartWateringAction,
+  getStopWateringAction,
+  getInitList,
+  getSetTimerAction
+} from '../store/actionCreators'
 
 class PlantMonitor extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      plants: [],
-      time: new Date()
-    };
-    this.timeId = setInterval(() => this.tick(), 30000);//30s	
+    this.state = store.getState();
+    this.timeId = setInterval(() => this.tick(), 3600000);//1 minutes
+    this.handleBtnStartClick = this.handleBtnStartClick.bind(this);
+    this.handleBtnStopClick = this.handleBtnStopClick.bind(this);
+    this.handleStoreChange = this.handleStoreChange.bind(this);
+    store.subscribe(this.handleStoreChange);
   }
-
-  tick() {
-    this.setState({
-      time: new Date()
-    })
-  }
-  //show plants 
-  refreshList = () => {
-    fetch(process.env.REACT_APP_API + 'plant')
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ plants: data });
-      });
-  }
-    
+  
   componentDidMount() {
-    this.refreshList();
+    const action = getInitList();
+    store.dispatch(action);
   }
-
-  componentDidUpdate() {
-    this.refreshList();
-  }  
   
   componentWillUnmount() {
     clearInterval(this.timeId);
   }
-
-  // update table watering status
-  startWatering = (plantId, wateringDateTime) => {
-    // not watering within 30 seconds of the last watering
-    const wateringLocalTime = Moment.utc(wateringDateTime).local().format()
-    var diff = Math.abs(new Date().getTime() - new Date(wateringLocalTime).getTime()) / 1000;
-    if (diff < 30) {
-      alert("no watering within 30 seconds of the last watering session");
-      return;
-    }
-
-    this.update(plantId, 1);
-
-  }
-
-  stopWatering = (plantId) => {
-    this.update(plantId, 0);
-  }
-
-  update(plantId, isWatering) {
-    fetch(process.env.REACT_APP_API + 'plant', {
-      method: 'PUT',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        PlantId: plantId,
-        WaterDateTime: new Date(),
-        IsWatering: isWatering
-      })
-    })
-      .then(res => res.json())
-      .then((result) => {
-        console.log(result);
-      },
-        (error) => {
-          alert('Failed' + error);
-        })
-  }
     
   render() {
-    const { plants } = this.state;
+    const { list } = this.state;
     return (
       <div >
         <Table className="mt-4" striped bordered hover size="sm">
@@ -94,7 +45,7 @@ class PlantMonitor extends Component {
           </tr></thead>
           <tbody>
             {
-              plants.map((value, key) => {
+              list.map((value, key) => {
                 const tt = 10000; //10 seconds
                 const ti = 300; //300 ms
                 const wt = 21600;//6 hours
@@ -105,22 +56,29 @@ class PlantMonitor extends Component {
                     <td>{value.PlantName}</td>
                     <td>{Moment.utc(value.WaterDateTime).local().format('dddd, MMMM Do YYYY, h:mm:ss a')}</td>
                     <td>{(value.IsWatering) ?
-                      <TimedProgressBar totalTime={tt} timerInterval={ti} id={value.PlantId} variant="success" />
+                      <TimedProgressBar
+                        totalTime={tt}
+                        timerInterval={ti}
+                        index={key}
+                        wateringFinish={this.handleBtnStopClick}
+                        variant="success" />
                       : 'waiting watering '}
-                    </td>
-                    <td className="alert alert-danger" role="alert">
+                    </td>                    
                       {
-                        (diff > wt) ? 'Please watering' : ''
-                      }
-                    </td>					
+                      (diff > wt) ? 
+                        <td className="alert alert-danger" role="alert">Please watering</td>: 
+                        <td> </td>
+                      }                    			
                     <td>
                       <ButtonToolbar>
-                        <Button className="mr-2" variant="info" disabled={(value.IsWatering) ? true : false}
-                          onClick={this.startWatering.bind(this, value.PlantId, value.WaterDateTime)}>
+                        <Button className="mr-2" variant="info"
+                          disabled={value.IsWatering}
+                          onClick={()=>this.handleBtnStartClick(key)}>
                           Start
                         </Button>
-                        <Button className="mr-2" variant="danger" disabled={(value.IsWatering) ? false : true}
-                          onClick={this.stopWatering.bind(this, value.PlantId)}>
+                        <Button className="mr-2" variant="danger"
+                          disabled={(value.IsWatering) ? false : true}
+                          onClick={()=>this.handleBtnStopClick(key)}>
                           Stop
                         </Button>                        
                       </ButtonToolbar>
@@ -133,6 +91,32 @@ class PlantMonitor extends Component {
         </Table>
       </div>
     );
+  }
+
+  handleBtnStartClick(index) {
+    // no watering within 30 seconds of the last watering session
+    const wateringLocalTime = Moment.utc(this.state.list[index].WaterDateTime).local().format()
+    var diff = Math.abs(new Date().getTime() - new Date(wateringLocalTime).getTime()) / 1000;
+    if (diff < 30) {
+      alert("no watering within 30 seconds of the last watering session");
+      return;
+    }
+    const action = getStartWateringAction(index);
+    store.dispatch(action);
+  }
+
+  handleBtnStopClick(index) {
+    const action = getStopWateringAction(index);
+    store.dispatch(action);
+  }
+  
+  handleStoreChange() {
+    this.setState(store.getState());
+  }
+
+  tick() {
+    const action = getSetTimerAction();
+    store.dispatch(action);
   }
 }
 
